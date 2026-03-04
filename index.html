@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Regime Gas · Owerri | Red, Blue & White</title>
+    <!-- Font Awesome 6 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <!-- Google Maps JavaScript API (with branches) -->
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyB41DRUbKWJHPxaFjMAwdrzWzbVKartNGg&callback=initMap" async defer></script>
+    <!-- Chart.js for admin dashboard -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', 'Segoe UI', sans-serif; }
+        body { background: #f0f2f5; }
+
+        /* ----- REGIME BRAND COLORS: RED (#E11B22), BLUE (#0033A0), WHITE (#FFFFFF) ----- */
+        .bg-red { background-color: #E11B22; }
+        .bg-blue { background-color: #0033A0; }
+        .text-red { color: #E11B22; }
+        .text-blue { color: #0033A0; }
+        .border-red { border-color: #E11B22; }
+
+        /* app wrapper */
+        .app-wrapper { display: flex; min-height: 100vh; }
+
+        /* ========== MAIN LANDING ========== */
+        .landing {
+            flex: 1;
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            box-shadow: 0 10px 30px rgba(0,20,50,0.1);
+        }
+
+        .container { padding: 2rem 2.5rem; }
+
+        /* hero with red/blue */
+        .hero {
+            background: linear-gradient(135deg, #0033A0 0%, #E11B22 100%);
+            color: white;
+            padding: 2.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .brand h1 { font-size: 2.8rem; font-weight: 800; display: flex; align-items: center; gap: 10px; }
+        .brand h1 i { color: white; }
+        .wa-header-btn {
+            background: white; color: #0033A0; padding: 0.9rem 2rem; border-radius: 60px;
+            font-weight: 700; text-decoration: none; display: inline-flex; align-items: center; gap: 12px;
+            border: 2px solid #E11B22;
+        }
+
+        .section-title { font-size: 2.2rem; font-weight: 700; margin: 2rem 0 1.5rem; border-left: 8px solid #E11B22; padding-left: 1.2rem; color: #0033A0; }
+
+        /* catalog cards */
+        .catalog-grid {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 2rem;
+        }
+        .product-card {
+            background: white; border-radius: 2rem; padding: 1.8rem; box-shadow: 0 12px 25px #d9e2ef;
+            border-top: 5px solid #E11B22; border-bottom: 3px solid #0033A0;
+        }
+        .product-icon { font-size: 3rem; color: #E11B22; }
+        .product-name { font-size: 1.8rem; font-weight: 700; color: #0033A0; }
+        .btn-wa {
+            background: #25D366; color: white; padding: 0.8rem; border-radius: 50px; display: flex;
+            align-items: center; justify-content: center; gap: 8px; text-decoration: none; margin-top: 1rem;
+        }
+
+        /* google map container */
+        #branchMap {
+            height: 400px; width: 100%; border-radius: 2rem; border: 4px solid #E11B22; margin: 2rem 0;
+        }
+
+        /* branches cards */
+        .branches-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px,1fr)); gap: 1.5rem; }
+        .branch-card { background: #f0f5ff; border-radius: 1.5rem; padding: 1.5rem; border-left: 10px solid #E11B22; }
+
+        /* footer red/blue */
+        .footer { background: #0033A0; color: white; padding: 2rem; border-radius: 3rem 3rem 0 0; margin-top: 3rem; display: flex; flex-wrap: wrap; gap: 2rem; }
+        .footer a { color: white; }
+
+        /* ========== ADMIN LOGIN MODAL ========== */
+        .login-overlay {
+            position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,20,40,0.8);
+            backdrop-filter: blur(6px); display: none; align-items: center; justify-content: center; z-index: 2000;
+        }
+        .login-card {
+            background: white; border-radius: 2.5rem; width: 380px; padding: 2.5rem;
+            border: 4px solid #E11B22; box-shadow: 0 30px 50px #00000070;
+        }
+        .login-card h2 { color: #0033A0; margin-bottom: 1.5rem; text-align: center; }
+
+        /* ========== ADMIN DASHBOARD (realistic) ========== */
+        .admin-panel {
+            width: 460px; background: #f8fafc; color: #0b2b3f; overflow-y: auto;
+            box-shadow: -5px 0 30px #00000050; display: none; flex-direction: column;
+            border-left: 6px solid #E11B22;
+        }
+        .admin-panel.open { display: flex; }
+        .admin-header { background: #0033A0; color: white; padding: 1.5rem; display: flex; justify-content: space-between; }
+        .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; padding: 1.2rem; }
+        .stat-card { background: white; border-radius: 1.5rem; padding: 1.2rem; box-shadow: 0 4px 8px #cbd5e1; border-left: 6px solid #E11B22; }
+        .chart-container { height: 160px; margin: 1rem 0; }
+        .inventory-item { background: white; padding: 0.8rem; border-radius: 1rem; margin-bottom: 0.8rem; border: 1px solid #0033A0; }
+        .admin-btn { background: #0033A0; color: white; border: none; border-radius: 40px; padding: 0.6rem 1.2rem; font-weight:600; cursor: pointer; }
+        .admin-btn.red { background: #E11B22; }
+
+        /* chatbot */
+        .chatbot-launcher {
+            position: fixed; bottom: 30px; left: 30px; background: #E11B22; color: white; border: none;
+            border-radius: 60px; padding: 1rem 2rem; font-weight: 700; display: flex; align-items: center; gap: 12px; cursor: pointer; z-index: 1001;
+        }
+        .chatbot-panel {
+            position: fixed; bottom: 110px; left: 30px; width: 340px; background: white; border-radius: 30px;
+            box-shadow: 0 20px 40px #00000060; display: none; flex-direction: column; overflow: hidden; z-index: 1001;
+            border: 3px solid #E11B22;
+        }
+        .chatbot-panel.open { display: flex; }
+        .chat-header { background: #0033A0; color: white; padding: 1rem; }
+        .chat-msgs { height: 280px; overflow-y: auto; padding: 1rem; background: #f1f5f9; }
+        .bot-msg { background: white; padding: 0.7rem 1rem; border-radius: 18px; margin-bottom: 8px; border-left: 5px solid #E11B22; }
+        .user-msg { background: #dbeafe; padding: 0.7rem 1rem; border-radius: 18px; margin-bottom: 8px; align-self: flex-end; border-right: 5px solid #0033A0; }
+    </style>
+</head>
+<body>
+<div class="app-wrapper">
+    <!-- MAIN LANDING PAGE -->
+    <div class="landing" id="landingPage">
+        <!-- hero red/blue -->
+        <div class="hero">
+            <div class="brand">
+                <h1><i class="fas fa-fire"></i> Regime Gas Plant</h1>
+                <p style="font-size:1.3rem;"><i class="fas fa-map-marker-alt"></i> Owerri, Imo State</p>
+            </div>
+            <a class="wa-header-btn" href="https://wa.me/2348069427385?text=Hello%20Regime%20Gas%20Owerri" target="_blank"><i class="fab fa-whatsapp"></i> 0806 942 7385</a>
+        </div>
+
+        <!-- catalog injected -->
+        <div class="container">
+            <h2 class="section-title"><i class="fas fa-cube"></i> Our Products & Accessories</h2>
+            <div id="customerCatalog" class="catalog-grid"></div>
+        </div>
+
+        <!-- branches + google map -->
+        <div class="container">
+            <h2 class="section-title"><i class="fas fa-map-marked-alt"></i> Our Branches</h2>
+            <div class="branches-grid" id="branchesList"></div>
+            <div id="branchMap"></div>
+        </div>
+
+        <!-- footer -->
+        <div class="footer">
+            <div><i class="fas fa-fire"></i> Regime Gas · Rated 4.3/5<br>© 2026 All rights reserved.</div>
+            <div>3 Egbeada St, New Owerri<br>0806 942 7385 · info@regimegasowerri.com</div>
+        </div>
+    </div>
+
+    <!-- ADMIN DASHBOARD PANEL (realistic) -->
+    <div class="admin-panel" id="adminPanel">
+        <div class="admin-header">
+            <h2><i class="fas fa-crown"></i> Admin</h2>
+            <button id="closeAdmin" class="admin-btn red" style="background:white; color:#0033A0;">✖</button>
+        </div>
+        <!-- stats with chart -->
+        <div class="stat-grid">
+            <div class="stat-card"><i class="fas fa-users"></i> Visitors <span id="visitorCount">1,284</span></div>
+            <div class="stat-card"><i class="fab fa-whatsapp"></i> WA clicks <span id="waClickCount">437</span></div>
+        </div>
+        <div class="chart-container">
+            <canvas id="trafficChart" style="width:100%; height:140px;"></canvas>
+        </div>
+        <!-- inventory management -->
+        <div style="padding:1rem;">
+            <h3><i class="fas fa-boxes" style="color:#E11B22;"></i> Inventory</h3>
+            <div id="inventoryList"></div>
+            <button class="admin-btn" id="addNewProduct">➕ Add product</button>
+            <button class="admin-btn red" id="publishChanges">📢 Publish changes</button>
+            <hr style="margin:1rem 0;">
+            <label>WhatsApp number</label>
+            <input type="text" id="adminPhone" value="2348069427385" style="width:100%; padding:0.5rem;">
+            <button class="admin-btn" id="updatePhoneBtn" style="margin-top:6px;">Update</button>
+        </div>
+    </div>
+</div>
+
+<!-- ADMIN LOGIN OVERLAY (red, white, blue) -->
+<div class="login-overlay" id="loginOverlay">
+    <div class="login-card">
+        <h2><i class="fas fa-lock text-blue"></i> Admin Login</h2>
+        <input type="password" id="adminPass" placeholder="Enter password" style="width:100%; padding:1rem; border-radius:60px; border:2px solid #E11B22; margin-bottom:1.5rem;">
+        <button id="loginBtn" class="admin-btn" style="width:100%; background:#0033A0; color:white; padding:1rem;">Login</button>
+        <p style="margin-top:1rem; text-align:center;">(default: <strong>regime2026</strong>)</p>
+    </div>
+</div>
+
+<!-- chatbot -->
+<button class="chatbot-launcher" id="chatLauncher"><i class="fas fa-robot"></i> Gas Assistant (FAQ)</button>
+<div class="chatbot-panel" id="chatPanel">
+    <div class="chat-header"><i class="fas fa-comment-dots"></i> RegimeBot · Owerri</div>
+    <div class="chat-msgs" id="chatMessages"><div class="bot-msg">🔹 Hi! Ask me about prices, branches, or gas safety.</div></div>
+    <div style="display:flex;"><input id="chatInput" placeholder="Type a question..." style="flex:1; padding:1rem;"><button id="sendChat" style="background:#E11B22; color:white; padding:0 1.5rem;"><i class="fas fa-paper-plane"></i></button></div>
+</div>
+
+<!-- admin toggle button (red/blue) -->
+<button class="admin-toggle" id="toggleAdmin" style="position:fixed; bottom:30px; right:30px; background:#0033A0; color:white; border:3px solid #E11B22; border-radius:60px; padding:1rem 2rem; font-weight:700; z-index:1000;"><i class="fas fa-user-lock"></i> Admin</button>
+
+<script>
+    (function(){
+        // ---------- REGIME INVENTORY (red,blue,white) ----------
+        let inventory = [
+            { id: 'g1', name: 'Gas Cylinders', desc: '3kg,5kg,12.5kg,15kg,45kg · industrial', price: 'from ₦8,200', icon: 'fa-burn' },
+            { id: 'g2', name: 'Regulators', desc: 'Single-stage, two-stage, automatic', price: 'from ₦4,500', icon: 'fa-tachometer-alt' },
+            { id: 'g3', name: 'Hoses & Pipes', desc: 'Rubber, stainless braided, copper, PE', price: 'from ₦3,200', icon: 'fa-wind' },
+            { id: 'g4', name: 'Safety Valves', desc: 'Ball, check, shut-off, excess flow', price: 'from ₦2,800', icon: 'fa-shield' },
+            { id: 'g5', name: 'Burners', desc: 'Single, double, triple ring, wok', price: 'from ₦9,800', icon: 'fa-fire' }
+        ];
+
+        let waNumber = '2348069427385';
+        let visitorCount = 1284;
+        let waClickCount = 437;
+        let trafficData = [12, 19, 15, 22, 24, 30, 28]; // last 7 days
+
+        // ---------- GOOGLE MAPS with branches ----------
+        window.initMap = function() {
+            const owerri = { lat: 5.4839, lng: 7.0353 };
+            const map = new google.maps.Map(document.getElementById('branchMap'), {
+                zoom: 12, center: owerri, mapTypeId: 'roadmap',
+                styles: [ { featureType: "poi", elementType: "labels", stylers: [{ visibility: "off" }] } ]
+            });
+            // Branches coordinates (approx)
+            const branches = [
+                { pos: { lat:5.492, lng:7.026 }, name:'Main Plant', addr:'3 Egbeada St, New Owerri' },
+                { pos: { lat:5.478, lng:7.012 }, name:'Relief Market', addr:'Opp. Egbu Road' },
+                { pos: { lat:5.512, lng:7.058 }, name:'Orogwe Road', addr:'Along Orogwe Onitsha Road' }
+            ];
+            branches.forEach(b => {
+                new google.maps.Marker({ position: b.pos, map, title: b.name, icon: 'http://maps.google.com/mapfiles/ms/icons/red-dot.png' });
+                const infowindow = new google.maps.InfoWindow({ content: `<b>${b.name}</b><br>${b.addr}` });
+                marker.addListener('click', () => infowindow.open(map, marker));
+            });
+        };
+
+        // render branch list
+        function renderBranches() {
+            const container = document.getElementById('branchesList');
+            if (!container) return;
+            container.innerHTML = `
+                <div class="branch-card"><i class="fas fa-map-pin text-red"></i> <b>Main Plant</b><br>3 Egbeada St, New Owerri<br>0806 942 7385</div>
+                <div class="branch-card"><i class="fas fa-map-pin text-red"></i> <b>Relief Market</b><br>Opp. Egbu Road<br>0816 458 1759</div>
+                <div class="branch-card"><i class="fas fa-map-pin text-red"></i> <b>Orogwe Road</b><br>Along Orogwe Onitsha Road<br>0806 942 7385</div>
+            `;
+        }
+
+        // render customer catalog
+        function renderCustomerCatalog() {
+            const container = document.getElementById('customerCatalog');
+            if (!container) return;
+            let html = '';
+            inventory.forEach(p => {
+                const waMsg = encodeURIComponent(`Hello Regime Gas, I need ${p.name} - ${p.desc}. Price?`);
+                html += `<div class="product-card">
+                    <div class="product-icon"><i class="fas ${p.icon}"></i></div>
+                    <div class="product-name">${p.name}</div>
+                    <div class="product-desc">${p.desc}</div>
+                    <div class="price" style="font-size:1.6rem; color:#E11B22;">${p.price}</div>
+                    <a class="btn-wa" href="https://wa.me/${waNumber}?text=${waMsg}" target="_blank"><i class="fab fa-whatsapp"></i> Order / Enquire</a>
+                </div>`;
+            });
+            container.innerHTML = html;
+        }
+
+        // admin inventory list
+        function renderInventoryManager() {
+            const list = document.getElementById('inventoryList');
+            if (!list) return;
+            let items = '';
+            inventory.forEach((p, idx) => {
+                items += `<div class="inventory-item" data-index="${idx}">
+                    <input class="inv-name" value="${p.name}" style="width:100%;"><br>
+                    <textarea class="inv-desc" rows="2">${p.desc}</textarea>
+                    <input class="inv-price" value="${p.price}">
+                    <input class="inv-icon" value="${p.icon}">
+                    <button class="admin-btn red remove-item" style="margin-top:4px;">remove</button>
+                </div>`;
+            });
+            list.innerHTML = items || '<p>No items</p>';
+        }
+
+        // sync from admin
+        function syncInventory() {
+            const items = document.querySelectorAll('.inventory-item');
+            const updated = [];
+            items.forEach((item, idx) => {
+                const name = item.querySelector('.inv-name')?.value || 'product';
+                const desc = item.querySelector('.inv-desc')?.value || '';
+                const price = item.querySelector('.inv-price')?.value || '0';
+                const icon = item.querySelector('.inv-icon')?.value || 'fa-burn';
+                updated.push({ id: 'd'+Date.now()+idx, name, desc, price, icon });
+            });
+            if (updated.length) inventory = updated;
+        }
+
+        // stats + chart
+        function refreshStats() {
+            document.getElementById('visitorCount').innerText = visitorCount;
+            document.getElementById('waClickCount').innerText = waClickCount;
+            const ctx = document.getElementById('trafficChart')?.getContext('2d');
+            if (ctx) {
+                new Chart(ctx, {
+                    type: 'line',
+                    data: { labels: ['M','T','W','T','F','S','S'], datasets: [{ label: 'visitors', data: trafficData, borderColor: '#E11B22', tension:0.3 }] },
+                    options: { responsive: true, maintainAspectRatio: false }
+                });
+            }
+        }
+
+        // track WA clicks
+        document.addEventListener('click', (e) => { if(e.target.closest('.btn-wa')) { waClickCount++; refreshStats(); } });
+
+        // ----- chatbot with FAQ database -----
+        const chatPanel = document.getElementById('chatPanel');
+        const chatMsgs = document.getElementById('chatMessages');
+        const chatInput = document.getElementById('chatInput');
+        document.getElementById('chatLauncher').addEventListener('click', () => chatPanel.classList.toggle('open'));
+        document.getElementById('sendChat').addEventListener('click', sendChat);
+        chatInput.addEventListener('keypress', (e) => { if(e.key === 'Enter') sendChat(); });
+        function sendChat() {
+            const txt = chatInput.value.trim().toLowerCase();
+            if (!txt) return;
+            chatMsgs.innerHTML += `<div class="user-msg">${chatInput.value}</div>`;
+            chatInput.value = '';
+            let reply = "I'll connect you with a human. Meanwhile call 0806 942 7385.";
+
+            // FAQ knowledge base
+            const faqs = {
+                'price': '6kg ~₦25,000, 12.5kg stainless ~₦77,000, none stainless ₦44,000, 25kg ~₦90,800. Accessories vary.',
+                'branch': 'Main Plant: 3 Egbeada St, Relief Market, Orogwe Road. All open 7am-6pm Mon-Sat, Sun 8am-4pm.',
+                'delivery': 'We deliver within Owerri (2-4 hrs). Same day for orders before 3pm.',
+                'safety': 'Always keep cylinder upright, use quality hoses, and ventilate kitchen.',
+                'cylinder filling': 'Bring empty cylinder to any branch, pay only for gas.',
+                'hours': 'Mon-Sat 7am-6pm, Sun 8am-4pm.',
+                'phone': '0806 942 7385 or 0816 458 1759.',
+                'email': 'info@regimegasowerri.com',
+                'thank': 'You are welcome! Stay safe 🔥',
+                'hello': 'Hi! Hope you had a good day Please how may i help you today.',
+                'hi': 'Hello! Ask me about gas prices, branches, delivery, safety.'
+            };
+            for (let key in faqs) {
+                if (txt.includes(key)) { reply = faqs[key]; break; }
+            }
+            setTimeout(() => { chatMsgs.innerHTML += `<div class="bot-msg">${reply}</div>`; chatMsgs.scrollTop = chatMsgs.scrollHeight; }, 400);
+        }
+
+        // ----- ADMIN LOGIN (simple) -----
+        const loginOverlay = document.getElementById('loginOverlay');
+        const toggleAdmin = document.getElementById('toggleAdmin');
+        const adminPanel = document.getElementById('adminPanel');
+        const closeAdmin = document.getElementById('closeAdmin');
+
+        toggleAdmin.addEventListener('click', () => { loginOverlay.style.display = 'flex'; });
+        document.getElementById('loginBtn').addEventListener('click', () => {
+            const pass = document.getElementById('adminPass').value;
+            if (pass === 'regime2026') {
+                loginOverlay.style.display = 'none';
+                adminPanel.classList.add('open');
+                renderInventoryManager();
+                refreshStats();
+            } else { alert('Incorrect password (use regime2026)'); }
+        });
+        closeAdmin.addEventListener('click', () => adminPanel.classList.remove('open'));
+
+        // inventory actions
+        document.getElementById('addNewProduct').addEventListener('click', () => {
+            const list = document.getElementById('inventoryList');
+            const d = document.createElement('div'); d.className = 'inventory-item';
+            d.innerHTML = `<input class="inv-name" value="new item"><textarea class="inv-desc">describe</textarea><input class="inv-price" value="₦0"><input class="inv-icon" value="fa-cog"><button class="admin-btn red remove-item">remove</button>`;
+            list.appendChild(d);
+        });
+        document.getElementById('inventoryList').addEventListener('click', (e) => {
+            if (e.target.classList.contains('remove-item')) e.target.closest('.inventory-item').remove();
+        });
+        document.getElementById('publishChanges').addEventListener('click', () => {
+            syncInventory();
+            renderCustomerCatalog();
+            renderInventoryManager();
+            alert('Catalog updated');
+        });
+        document.getElementById('updatePhoneBtn').addEventListener('click', () => {
+            const p = document.getElementById('adminPhone').value.replace(/\D/g,'');
+            if(p.length >= 10) { waNumber = p; renderCustomerCatalog(); alert('WhatsApp updated'); }
+        });
+
+        // initial renders
+        renderCustomerCatalog();
+        renderBranches();
+        renderInventoryManager();
+        refreshStats();
+
+        // simulate visitor increment
+        window.addEventListener('load', () => { visitorCount++; refreshStats(); });
+    })();
+</script>
+</body>
+</html>
